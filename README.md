@@ -181,6 +181,22 @@ conda env remove -n rl-swarm
 ./setup_ubuntu_miniconda.sh  # 或 setup_macos_conda.sh
 ```
 
+#### 5. localhost 登录卡住问题
+如果在访问 http://localhost:3000 时页面卡在加载状态，这是因为认证模态框没有自动打开。解决方案：
+
+在项目根目录运行以下命令来修复：
+```bash
+cd rl-swarm
+sed -i '/^  return (/i\  useEffect(() => {\n    if (!user && !signerStatus.isInitializing) {\n      openAuthModal();\n    }\n  }, [user, signerStatus.isInitializing, openAuthModal]);\n\n' modal-login/app/page.tsx
+```
+
+然后重启服务器：
+```bash
+# 停止当前运行的脚本 (Ctrl+C)
+# 重新运行
+./run_rl_swarm_fixed.sh
+```
+
 #### 2. 包安装冲突
 ```bash
 # 使用 mamba 替代 conda（更快）

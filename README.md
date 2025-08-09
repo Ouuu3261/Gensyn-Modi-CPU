@@ -16,8 +16,10 @@ cd Gensyn-Modi-CPU
 # 如果遇到 Anaconda 服务条款问题，运行以下命令
 conda tos accept
 
+# 如果遇到 'conda init' 错误，运行以下命令
+conda init bash && source ~/.bashrc
+
 # 激活环境并启动
-source ~/.bashrc
 conda activate rl-swarm
 ./run_rl_swarm_fixed.sh
 ```
@@ -148,6 +150,9 @@ export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.8
 ```bash
 # 如果遇到 Anaconda 服务条款问题
 conda tos accept
+
+# 如果遇到 'conda init' 错误
+conda init bash && source ~/.bashrc
 
 # 清理 conda 缓存
 conda clean --all

@@ -15,7 +15,7 @@ huggingface-hub==0.34.3
 # 强化学习和训练
 trl==0.21.0
 reasoning_gym==0.1.23
-gensyn-genrl==0.1.4
+# gensyn-genrl==0.1.4  # 暂时注释，手动安装避免依赖冲突
 
 # 分布式训练
 hivemind @ git+https://github.com/learning-at-home/hivemind@1.11.11

@@ -19,6 +19,12 @@ conda tos accept
 # 如果遇到 'conda init' 错误，运行以下命令
 conda init bash && source ~/.bashrc
 
+# 如果conda命令未找到，手动添加到PATH
+export PATH="$HOME/miniconda3/bin:$PATH"
+
+# 手动创建conda虚拟环境（如果自动脚本失败）
+conda create -n rl-swarm python=3.11 -y
+
 # 激活环境并启动
 conda activate rl-swarm
 ./run_rl_swarm_fixed.sh
@@ -32,6 +38,12 @@ cd Gensyn-Modi-CPU
 
 # 运行环境设置脚本
 ./setup_macos_conda.sh
+
+# 如果conda命令未找到，手动添加到PATH
+export PATH="$HOME/miniconda3/bin:$PATH"
+
+# 手动创建conda虚拟环境（如果自动脚本失败）
+conda create -n rl-swarm python=3.11 -y
 
 # 激活环境并启动
 conda activate rl-swarm
@@ -153,6 +165,13 @@ conda tos accept
 
 # 如果遇到 'conda init' 错误
 conda init bash && source ~/.bashrc
+
+# 如果conda命令未找到，手动添加到PATH
+export PATH="$HOME/miniconda3/bin:$PATH"
+
+# 手动创建conda虚拟环境
+conda create -n rl-swarm python=3.11 -y
+conda activate rl-swarm
 
 # 清理 conda 缓存
 conda clean --all

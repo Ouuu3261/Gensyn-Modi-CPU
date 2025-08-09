@@ -61,6 +61,85 @@ echo_red() {
     echo -e "$RED_TEXT$1$RESET_TEXT"
 }
 
+# Function to check and fix identity file permissions
+check_identity_file() {
+    echo_green ">> 检查身份文件权限..."
+    
+    # 确保身份文件路径已设置
+    if [[ -z "$IDENTITY_PATH" ]]; then
+        IDENTITY_PATH="$DEFAULT_IDENTITY_PATH"
+        echo_green "   - 使用默认身份文件路径: $IDENTITY_PATH"
+    fi
+    
+    # 检查身份文件是否存在
+    if [[ ! -f "$IDENTITY_PATH" ]]; then
+        echo_green "   - 身份文件不存在，正在生成新的身份文件..."
+        
+        # 生成新的身份文件
+        python3 -c "
+import os
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+
+try:
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+    )
+    
+    pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    
+    with open('$IDENTITY_PATH', 'wb') as f:
+        f.write(pem)
+    
+    print('✅ 身份文件已生成: $IDENTITY_PATH')
+except Exception as e:
+    print(f'❌ 生成身份文件失败: {e}')
+    exit(1)
+"
+        
+        if [[ $? -ne 0 ]]; then
+            echo_red "❌ 身份文件生成失败"
+            exit 1
+        fi
+    else
+        echo_green "   - 身份文件已存在: $IDENTITY_PATH"
+    fi
+    
+    # 检查并修复文件权限
+    local current_perms=$(stat -c "%a" "$IDENTITY_PATH" 2>/dev/null || stat -f "%A" "$IDENTITY_PATH" 2>/dev/null)
+    
+    if [[ "$current_perms" != "600" ]]; then
+        echo_green "   - 当前权限: $current_perms，正在修复为600..."
+        chmod 600 "$IDENTITY_PATH"
+        
+        if [[ $? -eq 0 ]]; then
+            echo_green "   ✓ 身份文件权限已修复为600"
+        else
+            echo_red "   ❌ 权限修复失败"
+            exit 1
+        fi
+    else
+        echo_green "   ✓ 身份文件权限正确 (600)"
+    fi
+    
+    # 验证文件可读性
+    if [[ -r "$IDENTITY_PATH" ]]; then
+        echo_green "   ✓ 身份文件可读性验证通过"
+    else
+        echo_red "   ❌ 身份文件不可读"
+        exit 1
+    fi
+    
+    echo_green "✓ 身份文件检查完成"
+}
+
 ROOT_DIR="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)"
 
 # Function to clean up the server process upon exit
@@ -69,6 +148,12 @@ cleanup() {
 
     # Remove modal credentials if they exist
     rm -r $ROOT_DIR/modal-login/temp-data/*.json 2> /dev/null || true
+
+    # 确保身份文件权限正确（防止异常退出后权限被修改）
+    if [[ -f "$IDENTITY_PATH" ]]; then
+        echo_green "   - 恢复身份文件权限..."
+        chmod 600 "$IDENTITY_PATH" 2> /dev/null || true
+    fi
 
     # Kill all processes belonging to this script's process group
     kill -- -$$ || true
@@ -97,6 +182,9 @@ EOF
 
 # Create logs directory if it doesn't exist
 mkdir -p "$ROOT/logs"
+
+# 检查身份文件权限
+check_identity_file
 
 if [ "$CONNECT_TO_TESTNET" = true ]; then
     # Run modal_login server.

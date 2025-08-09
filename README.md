@@ -13,6 +13,9 @@ cd Gensyn-Modi-CPU
 # 运行自动安装脚本
 ./setup_ubuntu_miniconda.sh
 
+# 如果遇到 Anaconda 服务条款问题，运行以下命令
+conda tos accept
+
 # 激活环境并启动
 source ~/.bashrc
 conda activate rl-swarm
@@ -143,6 +146,9 @@ export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.8
 
 #### 1. Conda 环境创建失败
 ```bash
+# 如果遇到 Anaconda 服务条款问题
+conda tos accept
+
 # 清理 conda 缓存
 conda clean --all
 

@@ -1,0 +1,2 @@
+# This file ensures the temp-data directory is tracked by git
+# The temp-data directory is needed for storing temporary user data during login process

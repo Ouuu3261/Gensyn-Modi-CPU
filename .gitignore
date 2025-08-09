@@ -66,14 +66,16 @@ Thumbs.db
 *~
 
 # Project specific files
-temp-data/
+temp-data/*
+!temp-data/.gitkeep
 swarm.pem
 *.key
 *.cert
 *.p12
 *.jks
 *.keystore
-logs/
+logs/*
+!logs/.gitkeep
 outputs/
 runs/
 model_output_samples/

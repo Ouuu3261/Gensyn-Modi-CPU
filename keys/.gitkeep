@@ -1,0 +1,2 @@
+# This file ensures the keys directory is tracked by git
+# The keys directory is used for storing cryptographic keys and identity files

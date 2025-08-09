@@ -1,0 +1,109 @@
+# RL-Swarm 项目依赖列表
+# 此文件包含运行RL-Swarm项目所需的所有Python包
+
+# 核心机器学习框架
+torch>=2.8.0
+torchvision>=0.23.0
+torchaudio>=2.8.0
+transformers==4.51.3
+datasets==4.0.0
+accelerate==1.9.0
+tokenizers==0.21.4
+safetensors==0.6.1
+huggingface-hub==0.34.3
+
+# 强化学习和训练
+trl==0.21.0
+reasoning_gym==0.1.23
+gensyn-genrl==0.1.4
+
+# 分布式训练
+hivemind @ git+https://github.com/learning-at-home/hivemind@1.11.11
+
+# 数据处理和科学计算
+numpy==2.1.2
+pandas==2.3.1
+scipy==1.15.3
+matplotlib==3.10.5
+pillow>=11.0.0
+
+# 配置管理
+hydra-core==1.3.2
+omegaconf==2.3.0
+PyYAML==6.0.2
+pydantic==2.11.7
+pydantic_core>=2.33.2
+
+# Web API和服务
+fastapi
+uvicorn
+aiofiles
+aiohttp>=3.12.15
+websockets>=15.0.1
+boto3
+
+# 区块链和加密
+web3==7.13.0
+eth-account==0.13.7
+eth-utils>=5.3.0
+eth-abi>=5.2.0
+eth-hash>=0.7.1
+eth-keys>=0.7.0
+eth-typing>=5.2.1
+cryptography>=45.0.6
+pycryptodome>=3.23.0
+
+# 实用工具
+tqdm==4.67.1
+requests>=2.32.4
+click>=8.2.1
+rich>=14.1.0
+psutil>=7.0.0
+fsspec>=2024.6.1
+filelock>=3.13.1
+
+# 日志和监控
+wandb==0.21.0
+tensorboard==2.20.0
+python-json-logger
+sentry-sdk>=2.34.1
+
+# 开发和测试
+pytest
+GitPython>=3.1.45
+
+# 网络和通信
+grpcio>=1.74.0
+grpcio-tools>=1.74.0
+multidict>=6.6.3
+yarl>=1.20.1
+aiohappyeyeballs>=2.6.1
+
+# 编码和序列化
+msgpack>=1.1.1
+protobuf>=6.31.1
+base58>=1.0.3
+varint>=1.0.2
+
+# 数学和算法
+sympy>=1.13.3
+networkx>=3.3
+sortedcontainers>=2.4.0
+
+# 其他依赖
+typing_extensions>=4.12.2
+packaging>=25.0
+setuptools>=78.1.1
+wheel>=0.45.1
+six>=1.17.0
+attrs>=25.3.0
+certifi>=2025.8.3
+charset-normalizer>=3.4.2
+idna>=3.10
+urllib3>=2.5.0
+platformdirs>=4.3.8
+Jinja2>=3.1.4
+MarkupSafe>=2.1.5
+Pygments>=2.19.2
+markdown-it-py>=3.0.0
+mdurl>=0.1.2

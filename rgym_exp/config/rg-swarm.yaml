@@ -80,8 +80,9 @@ game_manager:
     _target_: genrl.communication.hivemind.hivemind_backend.HivemindBackend
     initial_peers: ${communications.initial_peers}
     identity_path: ${oc.env:IDENTITY_PATH,null}
-    startup_timeout: 120
+    startup_timeout: 300
     beam_size: 50
+    daemon_startup_timeout: 120
   coordinator:
     _target_: genrl.blockchain.coordinator.ModalSwarmCoordinator
     web3_url: ${blockchain.alchemy_url}

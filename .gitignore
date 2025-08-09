@@ -1,32 +1,123 @@
+# Python
 .venv
 **/__pycache__/
-.DS_Store
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
+# PyTorch & ML
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+models/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment files
 .env
+.env.test
+.env.local
+.env.production
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .next/
+out/
+dist/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific files
 temp-data/
 swarm.pem
+*.key
+*.cert
+*.p12
+*.jks
+*.keystore
 logs/
+outputs/
 runs/
 model_output_samples/
 grpo_trainer_lora_model/
 unsloth_compiled_cache/
-
-node_modules/
 web/ui/dist/
 
+# Build and cache
 /bazel-*
 /external
 /tmp
-
-dist/
 MODULE.bazel.lock
 **/.direnv
 .tmux.conf
 
+# User specific
 user/
-
 configs/
 genrl-swarm/
-
 result
+
+# Hugging Face cache
+.cache/
+.cache/huggingface/
+transformers_cache/
+
+# Weights & Biases
+wandb/
+
+# Data files
+data/
+datasets/
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+*.tmp
+*.temp

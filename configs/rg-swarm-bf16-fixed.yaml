@@ -1,0 +1,59 @@
+# 完整的BF16修复配置
+defaults:
+  - _self_
+
+training:
+  fp16: false
+  bf16: false
+  dataloader_pin_memory: false
+  remove_unused_columns: false
+  
+trainer:
+  config:
+    _target_: trl.trainer.GRPOConfig
+    # 明确禁用混合精度训练
+    fp16: false
+    bf16: false
+    torch_dtype: null
+    dataloader_pin_memory: false
+    remove_unused_columns: false
+    
+    # 基本训练参数
+    per_device_train_batch_size: 1
+    per_device_eval_batch_size: 1
+    gradient_accumulation_steps: 1
+    learning_rate: 1e-5
+    num_train_epochs: 1
+    logging_steps: 10
+    save_steps: 100
+    eval_steps: 100
+    warmup_steps: 0
+    
+    # 输出和保存设置
+    output_dir: "./outputs"
+    logging_dir: "./logs"
+    report_to: []  # 禁用wandb等报告
+    
+models:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: microsoft/DialoGPT-small
+  torch_dtype: "torch.float32"  # 强制使用float32
+  device_map: null
+  trust_remote_code: false
+  
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: microsoft/DialoGPT-small
+  trust_remote_code: false
+  padding_side: left
+
+# 数据相关配置
+data:
+  max_length: 512
+  batch_size: 1
+  
+# 环境变量设置
+env_vars:
+  PYTORCH_ENABLE_MPS_FALLBACK: "1"
+  PYTORCH_MPS_HIGH_WATERMARK_RATIO: "0.0"
+  TOKENIZERS_PARALLELISM: "false"

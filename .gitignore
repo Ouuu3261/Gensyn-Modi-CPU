@@ -91,7 +91,6 @@ MODULE.bazel.lock
 
 # User specific
 user/
-configs/
 genrl-swarm/
 result
 

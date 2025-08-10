@@ -179,7 +179,8 @@ echo_green "🔧 安装其他依赖..."
 pip install \
     reasoning_gym==0.1.23 \
     gensyn-genrl==0.1.4 \
-    cryptography==45.0.6 \
+    cryptography>=45.0.6 \
+    pycryptodome>=3.23.0 \
     eth-account==0.13.7 \
     psutil==7.0.0 \
     rich==14.1.0 \

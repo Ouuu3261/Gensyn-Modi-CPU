@@ -155,10 +155,10 @@ export default function Home() {
   }, [handleAll, sawConnected]);
 
   useEffect(() => {
-    if (!user && !signerStatus.isInitializing) {
+    if (!user && !signerStatus.isInitializing && sawDisconnected) {
       openAuthModal();
     }
-  }, [user, signerStatus.isInitializing, openAuthModal]);
+  }, [user, signerStatus.isInitializing, sawDisconnected, openAuthModal]);
 
   // Show alert if crypto.subtle isn't available.
   useEffect(() => {

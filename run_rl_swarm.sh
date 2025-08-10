@@ -113,7 +113,14 @@ except Exception as e:
     fi
     
     # 检查并修复文件权限
-    local current_perms=$(stat -c "%a" "$IDENTITY_PATH" 2>/dev/null || stat -f "%A" "$IDENTITY_PATH" 2>/dev/null)
+    local current_perms
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS使用不同的stat语法
+        current_perms=$(stat -f "%A" "$IDENTITY_PATH" 2>/dev/null || echo "")
+    else
+        # Linux使用标准语法
+        current_perms=$(stat -c "%a" "$IDENTITY_PATH" 2>/dev/null || echo "")
+    fi
     
     if [[ "$current_perms" != "600" ]]; then
         echo_green "   - 当前权限: $current_perms，正在修复为600..."
@@ -280,6 +287,11 @@ fi
 
 echo_green ">> Getting requirements..."
 pip install --upgrade pip
+
+# 安装关键的加密依赖（如果缺失）
+echo_green ">> 检查并安装加密依赖..."
+python3 -c "import cryptography" 2>/dev/null || pip install cryptography>=45.0.6
+python3 -c "import Crypto" 2>/dev/null || pip install pycryptodome>=3.23.0
 
 # echo_green ">> Installing GenRL..."
 pip install gensyn-genrl==0.1.4

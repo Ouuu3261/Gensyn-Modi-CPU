@@ -50,6 +50,7 @@ pip install --force-reinstall pycryptodome>=3.23.0
 echo_green ">> 安装其他关键依赖..."
 pip install reasoning-gym>=0.1.20
 pip install -U psutil
+pip install -U trl
 
 # 验证安装
 python3 -c "import cryptography; print('✓ cryptography安装成功:', cryptography.__version__)" || {
@@ -66,6 +67,10 @@ python3 -c "import reasoning_gym; print('✓ reasoning-gym安装成功')" || {
 }
 python3 -c "import psutil; print('✓ psutil安装成功:', psutil.__version__)" || {
     echo_red "✗ psutil安装失败"
+    exit 1
+}
+python3 -c "import trl; print('✓ trl安装成功:', trl.__version__)" || {
+    echo_red "✗ trl安装失败"
     exit 1
 }
 

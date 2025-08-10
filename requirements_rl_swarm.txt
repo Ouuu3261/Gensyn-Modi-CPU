@@ -15,7 +15,7 @@ huggingface-hub==0.34.3
 
 # 强化学习和训练
 reasoning-gym>=0.1.20
-# trl - 版本由pip自动选择
+trl
 # gensyn-genrl==0.1.4 - 通过脚本安装
 # hivemind - 通过git安装特定commit
 

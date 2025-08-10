@@ -444,6 +444,7 @@ python3 -c "import Crypto" 2>/dev/null || pip install pycryptodome>=3.23.0
 echo_green ">> 检查并安装其他关键依赖..."
 python3 -c "import reasoning_gym" 2>/dev/null || pip install reasoning-gym>=0.1.20
 python3 -c "import psutil" 2>/dev/null || pip install -U psutil
+python3 -c "import trl" 2>/dev/null || pip install -U trl
 
 # echo_green ">> Installing GenRL..."
 pip install gensyn-genrl==0.1.4

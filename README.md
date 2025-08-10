@@ -26,6 +26,64 @@ export PATH="$HOME/miniconda3/bin:$PATH"
 conda create -n rl-swarm python=3.11 -y
 pip install -r requirements_rl_swarm.txt
 
+# 或者全手动安装依赖
+# 1. 激活你的conda环境
+conda activate rl-swarm
+
+# 2. 升级pip
+pip install --upgrade pip
+
+# 3. 安装PyTorch (CPU版本)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# 4. 安装核心依赖
+pip install \
+    transformers==4.51.3 \
+    datasets==4.0.0 \
+    accelerate==1.9.0 \
+    pydantic==2.11.7 \
+    numpy==2.1.2 \
+    pandas==2.3.1 \
+    scipy==1.15.3 \
+    matplotlib==3.10.5 \
+    tqdm==4.67.1 \
+    requests==2.32.4 \
+    PyYAML==6.0.2 \
+    hydra-core==1.3.2 \
+    omegaconf==2.3.0
+
+# 5. 安装Web API依赖
+pip install \
+    fastapi \
+    uvicorn \
+    aiofiles \
+    boto3 \
+    python-json-logger \
+    pytest \
+    web3==7.13.0
+
+# 6. 安装机器学习相关依赖
+pip install \
+    trl==0.21.0 \
+    wandb==0.21.0 \
+    tensorboard==2.20.0 \
+    safetensors==0.6.1 \
+    tokenizers==0.21.4 \
+    huggingface-hub==0.34.3
+
+# 7. 安装Hivemind
+pip install "hivemind @ git+https://github.com/learning-at-home/hivemind@1.11.11"
+
+# 8. 安装其他项目特定依赖
+pip install \
+    reasoning_gym==0.1.23 \
+    gensyn-genrl==0.1.4 \
+    cryptography==45.0.6 \
+    eth-account==0.13.7 \
+    psutil==7.0.0 \
+    rich==14.1.0 \
+    click==8.2.1
+
 # 激活环境并启动
 conda activate rl-swarm
 ./run_rl_swarm_fixed.sh

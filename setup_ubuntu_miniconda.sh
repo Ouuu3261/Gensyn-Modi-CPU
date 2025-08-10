@@ -169,7 +169,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 # 安装核心依赖
 echo_green "📚 安装核心依赖..."
 pip install \
-    transformers==4.51.3 \
+    transformers>=4.55.0 \
     datasets==4.0.0 \
     accelerate==1.9.0 \
     pydantic==2.11.7 \
@@ -194,30 +194,34 @@ pip install \
     pytest \
     web3==7.13.0
 
-# 安装机器学习相关依赖
+# 安装机器学习相关依赖 (先安装trl，确保版本兼容)
 echo_green "🤖 安装机器学习依赖..."
 pip install \
-    trl==0.21.0 \
+    trl>=0.21.0 \
     wandb==0.21.0 \
     tensorboard==2.20.0 \
     safetensors==0.6.1 \
     tokenizers==0.21.4 \
     huggingface-hub==0.34.3
 
-# 安装Hivemind (分布式训练)
-echo_green "🐝 安装Hivemind..."
-pip install "hivemind @ git+https://github.com/learning-at-home/hivemind@1.11.11"
-
 # 安装其他项目特定依赖
 echo_green "🔧 安装其他依赖..."
 pip install \
-    reasoning_gym==0.1.23 \
-    gensyn-genrl==0.1.4 \
-    cryptography==45.0.6 \
+    reasoning-gym>=0.1.20 \
+    psutil>=6.0.0 \
+    cryptography>=45.0.6 \
+    pycryptodome>=3.23.0 \
     eth-account==0.13.7 \
-    psutil==7.0.0 \
     rich==14.1.0 \
     click==8.2.1
+
+# 安装Hivemind (分布式训练) - 使用gensyn-ai fork版本
+echo_green "🐝 安装Hivemind..."
+pip install "hivemind@git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd"
+
+# 最后安装GenRL (可能有版本冲突，放在最后)
+echo_green "🧠 安装GenRL..."
+pip install gensyn-genrl==0.1.4
 
 # 8. 安装Node.js和Yarn (用于前端)
 echo_green "📦 安装Node.js和Yarn..."

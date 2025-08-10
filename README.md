@@ -24,6 +24,7 @@ export PATH="$HOME/miniconda3/bin:$PATH"
 
 # 手动创建conda虚拟环境（如果自动脚本失败）
 conda create -n rl-swarm python=3.11 -y
+pip install -r requirements_rl_swarm.txt
 
 # 激活环境并启动
 conda activate rl-swarm

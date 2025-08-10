@@ -455,6 +455,9 @@ EOF
     cd ..
 
     echo_green ">> Waiting for modal userData.json to be created..."
+    LOGIN_WAIT_COUNT=0
+    MAX_LOGIN_WAIT=120  # 最多等待10分钟 (120 * 5秒)
+    
     while [ ! -f "modal-login/temp-data/userData.json" ]; do
         # 定期检查服务器进程是否还在运行
         if ! kill -0 $SERVER_PID 2>/dev/null; then
@@ -462,22 +465,77 @@ EOF
             echo_red "   tail -20 $ROOT/logs/yarn.log"
             exit 1
         fi
+        
+        # 显示等待进度，每30秒提醒一次
+        if [ $((LOGIN_WAIT_COUNT % 6)) -eq 0 ]; then
+            echo "   Still waiting for login... (${LOGIN_WAIT_COUNT}/5 seconds elapsed)"
+            echo "   Please make sure you have completed the login process at http://localhost:3000"
+        fi
+        
+        LOGIN_WAIT_COUNT=$((LOGIN_WAIT_COUNT + 1))
+        if [ $LOGIN_WAIT_COUNT -gt $MAX_LOGIN_WAIT ]; then
+            echo_red "❌ Timeout waiting for login after 10 minutes."
+            echo_red "   Please check if you have completed the login process."
+            echo_red "   You can also check the userData.json file manually:"
+            echo_red "   ls -la modal-login/temp-data/"
+            exit 1
+        fi
+        
         sleep 5  # Wait for 5 seconds before checking again
     done
-    echo "Found userData.json. Proceeding..."
+    echo_green "✓ Found userData.json. Proceeding..."
+
+    # 验证userData.json文件内容
+    if [ ! -s "modal-login/temp-data/userData.json" ]; then
+        echo_red "❌ userData.json file is empty. Login may have failed."
+        exit 1
+    fi
 
     ORG_ID=$(awk 'BEGIN { FS = "\"" } !/^[ \t]*[{}]/ { print $(NF - 1); exit }' modal-login/temp-data/userData.json)
-    echo "Your ORG_ID is set to: $ORG_ID"
+    
+    if [ -z "$ORG_ID" ]; then
+        echo_red "❌ Failed to extract ORG_ID from userData.json"
+        echo_red "   File contents:"
+        cat modal-login/temp-data/userData.json
+        exit 1
+    fi
+    
+    echo_green "✓ Your ORG_ID is set to: $ORG_ID"
 
     # Wait until the API key is activated by the client
-    echo "Waiting for API key to become activated..."
+    echo_green ">> Waiting for API key to become activated..."
+    API_WAIT_COUNT=0
+    MAX_API_WAIT=60  # 最多等待5分钟
+    
     while true; do
-        STATUS=$(curl -s "http://localhost:3000/api/get-api-key-status?orgId=$ORG_ID")
+        # 检查服务器进程是否还在运行
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo_red "❌ Server process died while waiting for API key activation."
+            exit 1
+        fi
+        
+        STATUS=$(curl -s --connect-timeout 5 --max-time 10 "http://localhost:3000/api/get-api-key-status?orgId=$ORG_ID" 2>/dev/null)
+        
         if [[ "$STATUS" == "activated" ]]; then
-            echo "API key is activated! Proceeding..."
+            echo_green "✓ API key is activated! Proceeding..."
             break
+        elif [[ "$STATUS" == "error"* ]] || [[ "$STATUS" == "Error"* ]]; then
+            echo_red "❌ API key activation failed: $STATUS"
+            exit 1
         else
-            echo "Waiting for API key to be activated..."
+            # 显示等待进度
+            if [ $((API_WAIT_COUNT % 6)) -eq 0 ]; then
+                echo "   Waiting for API key activation... (${API_WAIT_COUNT}/5 seconds elapsed)"
+                echo "   Current status: ${STATUS:-'no response'}"
+            fi
+            
+            API_WAIT_COUNT=$((API_WAIT_COUNT + 1))
+            if [ $API_WAIT_COUNT -gt $MAX_API_WAIT ]; then
+                echo_red "❌ Timeout waiting for API key activation after 5 minutes."
+                echo_red "   Last status: ${STATUS:-'no response'}"
+                exit 1
+            fi
+            
             sleep 5
         fi
     done

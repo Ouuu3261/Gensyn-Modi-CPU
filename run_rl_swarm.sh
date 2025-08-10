@@ -299,6 +299,10 @@ python3 -c "import reasoning_gym" 2>/dev/null || pip install reasoning-gym>=0.1.
 python3 -c "import psutil" 2>/dev/null || pip install -U psutil
 python3 -c "import trl" 2>/dev/null || pip install -U trl
 
+# 安装hivemind (使用gensyn-ai fork版本)
+echo_green ">> 安装hivemind..."
+python3 -c "import hivemind" 2>/dev/null || pip install "hivemind@git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd"
+
 # echo_green ">> Installing GenRL..."
 pip install gensyn-genrl==0.1.4
 pip install reasoning-gym>=0.1.20 # for reasoning gym env

@@ -17,10 +17,10 @@ huggingface-hub==0.34.3
 reasoning-gym>=0.1.20
 trl
 # gensyn-genrl==0.1.4 - 通过脚本安装
-# hivemind - 通过git安装特定commit
+# hivemind - 通过git安装特定commit (使用gensyn-ai fork版本)
 
 # 分布式训练
-hivemind @ git+https://github.com/learning-at-home/hivemind@1.11.11
+# hivemind @ git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd
 
 # 数据处理和科学计算
 numpy==2.1.2

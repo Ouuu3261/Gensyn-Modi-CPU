@@ -52,6 +52,10 @@ pip install reasoning-gym>=0.1.20
 pip install -U psutil
 pip install -U trl
 
+# 安装hivemind (使用gensyn-ai fork版本)
+echo_green ">> 安装hivemind..."
+pip install "hivemind@git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd"
+
 # 验证安装
 python3 -c "import cryptography; print('✓ cryptography安装成功:', cryptography.__version__)" || {
     echo_red "✗ cryptography安装失败"
@@ -71,6 +75,10 @@ python3 -c "import psutil; print('✓ psutil安装成功:', psutil.__version__)"
 }
 python3 -c "import trl; print('✓ trl安装成功:', trl.__version__)" || {
     echo_red "✗ trl安装失败"
+    exit 1
+}
+python3 -c "import hivemind; print('✓ hivemind安装成功:', hivemind.__version__)" || {
+    echo_red "✗ hivemind安装失败"
     exit 1
 }
 

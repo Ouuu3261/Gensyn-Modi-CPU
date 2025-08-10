@@ -455,8 +455,8 @@ EOF
     cd ..
 
     echo_green ">> Waiting for modal userData.json to be created..."
-    LOGIN_WAIT_COUNT=0
-    MAX_LOGIN_WAIT=120  # 最多等待10分钟 (120 * 5秒)
+    LOGIN_TIMEOUT=0
+    MAX_LOGIN_TIMEOUT=1800  # 30分钟超时
     
     while [ ! -f "modal-login/temp-data/userData.json" ]; do
         # 定期检查服务器进程是否还在运行
@@ -466,22 +466,27 @@ EOF
             exit 1
         fi
         
-        # 显示等待进度，每30秒提醒一次
-        if [ $((LOGIN_WAIT_COUNT % 6)) -eq 0 ]; then
-            echo "   Still waiting for login... (${LOGIN_WAIT_COUNT}/5 seconds elapsed)"
-            echo "   Please make sure you have completed the login process at http://localhost:3000"
-        fi
-        
-        LOGIN_WAIT_COUNT=$((LOGIN_WAIT_COUNT + 1))
-        if [ $LOGIN_WAIT_COUNT -gt $MAX_LOGIN_WAIT ]; then
-            echo_red "❌ Timeout waiting for login after 10 minutes."
-            echo_red "   Please check if you have completed the login process."
-            echo_red "   You can also check the userData.json file manually:"
-            echo_red "   ls -la modal-login/temp-data/"
-            exit 1
+        # 每60秒显示一次等待提示，避免用户以为脚本卡住了
+        if [ $((LOGIN_TIMEOUT % 60)) -eq 0 ]; then
+            echo_green "   Still waiting for login... (${LOGIN_TIMEOUT}s elapsed)"
+            echo_green "   Please make sure you have:"
+            echo_green "   1. Opened http://localhost:3000 in your browser (or via SSH port forwarding)"
+            echo_green "   2. Completed the login process"
+            echo_green "   3. The login page shows 'Success' or similar confirmation"
         fi
         
         sleep 5  # Wait for 5 seconds before checking again
+        LOGIN_TIMEOUT=$((LOGIN_TIMEOUT + 5))
+        
+        # 超时检查
+        if [ $LOGIN_TIMEOUT -ge $MAX_LOGIN_TIMEOUT ]; then
+            echo_red "❌ Login timeout after 30 minutes. Please check:"
+            echo_red "   1. Server is accessible at http://localhost:3000"
+            echo_red "   2. You have completed the login process"
+            echo_red "   3. Check server logs: tail -20 $ROOT/logs/yarn.log"
+            echo_red "   4. If using SSH, ensure port forwarding is working: ssh -L 3000:localhost:3000 user@server"
+            exit 1
+        fi
     done
     echo_green "✓ Found userData.json. Proceeding..."
 
@@ -492,51 +497,46 @@ EOF
     fi
 
     ORG_ID=$(awk 'BEGIN { FS = "\"" } !/^[ \t]*[{}]/ { print $(NF - 1); exit }' modal-login/temp-data/userData.json)
-    
     if [ -z "$ORG_ID" ]; then
-        echo_red "❌ Failed to extract ORG_ID from userData.json"
+        echo_red "❌ Failed to extract ORG_ID from userData.json. File may be corrupted."
         echo_red "   File contents:"
         cat modal-login/temp-data/userData.json
         exit 1
     fi
-    
     echo_green "✓ Your ORG_ID is set to: $ORG_ID"
 
     # Wait until the API key is activated by the client
     echo_green ">> Waiting for API key to become activated..."
-    API_WAIT_COUNT=0
-    MAX_API_WAIT=60  # 最多等待5分钟
+    API_KEY_TIMEOUT=0
+    MAX_API_KEY_TIMEOUT=300  # 5分钟超时
     
     while true; do
         # 检查服务器进程是否还在运行
         if ! kill -0 $SERVER_PID 2>/dev/null; then
-            echo_red "❌ Server process died while waiting for API key activation."
+            echo_red "❌ Server process died while waiting for API key activation. Check logs:"
+            echo_red "   tail -20 $ROOT/logs/yarn.log"
             exit 1
         fi
         
-        STATUS=$(curl -s --connect-timeout 5 --max-time 10 "http://localhost:3000/api/get-api-key-status?orgId=$ORG_ID" 2>/dev/null)
-        
+        STATUS=$(curl -s --connect-timeout 5 --max-time 10 "http://localhost:3000/api/get-api-key-status?orgId=$ORG_ID" 2>/dev/null || echo "error")
         if [[ "$STATUS" == "activated" ]]; then
             echo_green "✓ API key is activated! Proceeding..."
             break
-        elif [[ "$STATUS" == "error"* ]] || [[ "$STATUS" == "Error"* ]]; then
-            echo_red "❌ API key activation failed: $STATUS"
-            exit 1
+        elif [[ "$STATUS" == "pending" ]]; then
+            echo "   API key is pending activation... (${API_KEY_TIMEOUT}s elapsed)"
         else
-            # 显示等待进度
-            if [ $((API_WAIT_COUNT % 6)) -eq 0 ]; then
-                echo "   Waiting for API key activation... (${API_WAIT_COUNT}/5 seconds elapsed)"
-                echo "   Current status: ${STATUS:-'no response'}"
-            fi
-            
-            API_WAIT_COUNT=$((API_WAIT_COUNT + 1))
-            if [ $API_WAIT_COUNT -gt $MAX_API_WAIT ]; then
-                echo_red "❌ Timeout waiting for API key activation after 5 minutes."
-                echo_red "   Last status: ${STATUS:-'no response'}"
-                exit 1
-            fi
-            
-            sleep 5
+            echo "   Checking API key status... (${API_KEY_TIMEOUT}s elapsed)"
+        fi
+        
+        sleep 5
+        API_KEY_TIMEOUT=$((API_KEY_TIMEOUT + 5))
+        
+        # 超时检查
+        if [ $API_KEY_TIMEOUT -ge $MAX_API_KEY_TIMEOUT ]; then
+            echo_red "❌ API key activation timeout after 5 minutes."
+            echo_red "   Current status: $STATUS"
+            echo_red "   Please check if the login process was completed successfully."
+            exit 1
         fi
     done
 fi

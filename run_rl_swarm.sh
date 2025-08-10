@@ -293,6 +293,11 @@ echo_green ">> 检查并安装加密依赖..."
 python3 -c "import cryptography" 2>/dev/null || pip install cryptography>=45.0.6
 python3 -c "import Crypto" 2>/dev/null || pip install pycryptodome>=3.23.0
 
+# 安装其他关键依赖
+echo_green ">> 检查并安装其他关键依赖..."
+python3 -c "import reasoning_gym" 2>/dev/null || pip install reasoning-gym>=0.1.20
+python3 -c "import psutil" 2>/dev/null || pip install -U psutil
+
 # echo_green ">> Installing GenRL..."
 pip install gensyn-genrl==0.1.4
 pip install reasoning-gym>=0.1.20 # for reasoning gym env

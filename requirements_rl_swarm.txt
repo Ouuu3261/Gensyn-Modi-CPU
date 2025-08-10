@@ -13,9 +13,9 @@ tokenizers==0.21.4
 safetensors==0.6.1
 huggingface-hub==0.34.3
 
-# 强化学习和训练（通过脚本安装）
+# 强化学习和训练
+reasoning-gym>=0.1.20
 # trl - 版本由pip自动选择
-# reasoning_gym>=0.1.20 - 通过脚本安装
 # gensyn-genrl==0.1.4 - 通过脚本安装
 # hivemind - 通过git安装特定commit
 
@@ -60,7 +60,7 @@ tqdm==4.67.1
 requests>=2.32.4
 click>=8.2.1
 rich>=14.1.0
-psutil>=7.0.0
+psutil>=6.0.0
 fsspec>=2024.6.1
 filelock>=3.13.1
 

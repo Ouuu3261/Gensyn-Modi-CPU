@@ -81,8 +81,8 @@ open_browser() {
             fi
             ;;
         "linux")
-            # 检查是否有GUI环境
-            if [[ -n "$DISPLAY" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
+            # 检查是否有GUI环境（安全检查未定义变量）
+            if [[ -n "${DISPLAY:-}" ]] || [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
                 # 有GUI环境，尝试打开浏览器
                 if command -v xdg-open > /dev/null 2>&1; then
                     if xdg-open "$url" 2> /dev/null; then

@@ -410,9 +410,9 @@ EOF
     echo "Started server process: $SERVER_PID"
     
     # 等待服务器启动并进行健康检查
-    echo_green ">> Checking server health..."
+    echo_green ">> Waiting for server to start (this may take a few minutes for first-time setup)..."
     RETRY_COUNT=0
-    MAX_RETRIES=30  # 最多等待30次，每次2秒，总共60秒
+    MAX_RETRIES=60  # 最多等待60次，每次5秒，总共5分钟
     
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         # 检查进程是否还在运行
@@ -422,20 +422,24 @@ EOF
             exit 1
         fi
         
-        # 检查服务器是否响应
-        if curl -s -f "http://localhost:3000" > /dev/null 2>&1; then
+        # 检查服务器是否响应（移除-f参数，只检查连接性）
+        if curl -s --connect-timeout 3 --max-time 10 "http://localhost:3000" > /dev/null 2>&1; then
             echo_green "✓ Server is responding on port 3000"
             break
         fi
         
-        echo "   Waiting for server to start... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
-        sleep 2
+        # 每10次尝试显示一次进度，避免输出过多
+        if [ $((RETRY_COUNT % 10)) -eq 0 ] || [ $RETRY_COUNT -lt 5 ]; then
+            echo "   Waiting for server to start... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+        fi
+        sleep 5
         RETRY_COUNT=$((RETRY_COUNT + 1))
     done
     
     if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-        echo_red "❌ Server failed to start within 60 seconds. Check logs:"
+        echo_red "❌ Server failed to start within 5 minutes. Check logs:"
         echo_red "   tail -20 $ROOT/logs/yarn.log"
+        echo_red "   You can also try running 'cd modal-login && yarn start' manually to see detailed errors."
         exit 1
     fi
 

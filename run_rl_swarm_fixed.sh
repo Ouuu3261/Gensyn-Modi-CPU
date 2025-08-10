@@ -408,7 +408,36 @@ EOF
 
     SERVER_PID=$!  # Store the process ID
     echo "Started server process: $SERVER_PID"
-    sleep 5
+    
+    # 等待服务器启动并进行健康检查
+    echo_green ">> Checking server health..."
+    RETRY_COUNT=0
+    MAX_RETRIES=30  # 最多等待30次，每次2秒，总共60秒
+    
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        # 检查进程是否还在运行
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo_red "❌ Server process died unexpectedly. Check logs for details:"
+            echo_red "   tail -20 $ROOT/logs/yarn.log"
+            exit 1
+        fi
+        
+        # 检查服务器是否响应
+        if curl -s -f "http://localhost:3000" > /dev/null 2>&1; then
+            echo_green "✓ Server is responding on port 3000"
+            break
+        fi
+        
+        echo "   Waiting for server to start... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+        sleep 2
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+    done
+    
+    if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+        echo_red "❌ Server failed to start within 60 seconds. Check logs:"
+        echo_red "   tail -20 $ROOT/logs/yarn.log"
+        exit 1
+    fi
 
     # Try to open the URL in the default browser
     if [ -z "$DOCKER" ]; then
@@ -423,6 +452,12 @@ EOF
 
     echo_green ">> Waiting for modal userData.json to be created..."
     while [ ! -f "modal-login/temp-data/userData.json" ]; do
+        # 定期检查服务器进程是否还在运行
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo_red "❌ Server process died while waiting for login. Check logs:"
+            echo_red "   tail -20 $ROOT/logs/yarn.log"
+            exit 1
+        fi
         sleep 5  # Wait for 5 seconds before checking again
     done
     echo "Found userData.json. Proceeding..."

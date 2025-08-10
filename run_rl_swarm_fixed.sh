@@ -445,7 +445,7 @@ EOF
 
     # Try to open the URL in the default browser
     if [ -z "$DOCKER" ]; then
-        open_browser "http://localhost:3000"
+        open_browser "http://localhost:3000" || true
         # 无论是否成功打开浏览器，都继续等待用户操作
         echo_green ">> Waiting for you to complete the login process in your browser..."
     else

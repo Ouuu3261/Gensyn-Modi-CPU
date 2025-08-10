@@ -81,21 +81,31 @@ open_browser() {
             fi
             ;;
         "linux")
-            if command -v xdg-open > /dev/null 2>&1; then
-                if xdg-open "$url" 2> /dev/null; then
-                    echo_green ">> Successfully opened $url in your default browser (Linux)."
-                    return 0
+            # 检查是否有GUI环境
+            if [[ -n "$DISPLAY" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
+                # 有GUI环境，尝试打开浏览器
+                if command -v xdg-open > /dev/null 2>&1; then
+                    if xdg-open "$url" 2> /dev/null; then
+                        echo_green ">> Successfully opened $url in your default browser (Linux GUI)."
+                        return 0
+                    fi
+                elif command -v sensible-browser > /dev/null 2>&1; then
+                    if sensible-browser "$url" 2> /dev/null; then
+                        echo_green ">> Successfully opened $url in your default browser (Linux GUI)."
+                        return 0
+                    fi
                 fi
-            elif command -v sensible-browser > /dev/null 2>&1; then
-                if sensible-browser "$url" 2> /dev/null; then
-                    echo_green ">> Successfully opened $url in your default browser (Linux)."
-                    return 0
-                fi
+                echo_green ">> Failed to open browser automatically. Please open $url manually in your browser."
+            else
+                # 无头环境，直接提示用户手动打开
+                echo_green ">> Detected headless environment (no GUI). Please open $url manually in your browser."
+                echo_green ">> If you're using SSH, you can:"
+                echo_green "   1. Open $url in your local browser"
+                echo_green "   2. Or use SSH port forwarding: ssh -L 3000:localhost:3000 user@server"
             fi
             ;;
     esac
     
-    echo ">> Failed to open $url. Please open it manually."
     return 1
 }
 
@@ -403,6 +413,8 @@ EOF
     # Try to open the URL in the default browser
     if [ -z "$DOCKER" ]; then
         open_browser "http://localhost:3000"
+        # 无论是否成功打开浏览器，都继续等待用户操作
+        echo_green ">> Waiting for you to complete the login process in your browser..."
     else
         echo_green ">> Please open http://localhost:3000 in your host browser."
     fi

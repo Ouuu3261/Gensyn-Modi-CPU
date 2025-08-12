@@ -64,6 +64,46 @@ echo_blue() {
     echo -e "$BLUE_TEXT$1$RESET_TEXT"
 }
 
+open_browser() {
+    local url="$1"
+    local os_type=$(detect_os)
+    
+    case $os_type in
+        "macos")
+            if open "$url" 2> /dev/null; then
+                echo_green ">> Successfully opened $url in your default browser (macOS)."
+                return 0
+            fi
+            ;;
+        "linux")
+            # 检查是否有GUI环境（安全检查未定义变量）
+            if [[ -n "${DISPLAY:-}" ]] || [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+                # 有GUI环境，尝试打开浏览器
+                if command -v xdg-open > /dev/null 2>&1; then
+                    if xdg-open "$url" 2> /dev/null; then
+                        echo_green ">> Successfully opened $url in your default browser (Linux GUI)."
+                        return 0
+                    fi
+                elif command -v sensible-browser > /dev/null 2>&1; then
+                    if sensible-browser "$url" 2> /dev/null; then
+                        echo_green ">> Successfully opened $url in your default browser (Linux GUI)."
+                        return 0
+                    fi
+                fi
+                echo_green ">> Failed to open browser automatically. Please open $url manually in your browser."
+            else
+                # 无头环境，直接提示用户手动打开
+                echo_green ">> Detected headless environment (no GUI). Please open $url manually in your browser."
+                echo_green ">> If you're using SSH, you can:"
+                echo_green "   1. Open $url in your local browser"
+                echo_green "   2. Or use SSH port forwarding: ssh -L 3000:localhost:3000 user@server"
+            fi
+            ;;
+    esac
+    
+    return 1
+}
+
 echo_red() {
     echo -e "$RED_TEXT$1$RESET_TEXT"
 }
@@ -337,48 +377,87 @@ EOF
         exit 1
     fi
     
+    # Try to open the URL in the default browser
+    if [ -z "$DOCKER" ]; then
+        open_browser "http://localhost:3000" || true
+        # 无论是否成功打开浏览器，都继续等待用户操作
+        echo_green ">> Waiting for you to complete the login process in your browser..."
+    else
+        echo_green ">> Please open http://localhost:3000 in your host browser."
+    fi
+
     cd ..
     
+    echo_green ">> Waiting for modal userData.json to be created..."
+    LOGIN_TIMEOUT=0
+    MAX_LOGIN_TIMEOUT=1800  # 30分钟超时
+    
+    while [ ! -f "modal-login/temp-data/userData.json" ]; do
+        # 定期检查服务器进程是否还在运行
+        if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo_red "❌ Server process died while waiting for login. Check logs:"
+            echo_red "   tail -20 $ROOT/logs/yarn.log"
+            exit 1
+        fi
+        
+        # 每60秒显示一次等待提示，避免用户以为脚本卡住了
+        if [ $((LOGIN_TIMEOUT % 60)) -eq 0 ]; then
+            echo_green "   Still waiting for login... (${LOGIN_TIMEOUT}s elapsed)"
+            echo_green "   Please make sure you have:"
+            echo_green "   1. Opened http://localhost:3000 in your browser (or via SSH port forwarding)"
+            echo_green "   2. Completed the login process"
+            echo_green "   3. The login page shows 'Success' or similar confirmation"
+        fi
+        
+        sleep 5  # Wait for 5 seconds before checking again
+        LOGIN_TIMEOUT=$((LOGIN_TIMEOUT + 5))
+        
+        # 超时检查
+        if [ $LOGIN_TIMEOUT -ge $MAX_LOGIN_TIMEOUT ]; then
+            echo_red "❌ Login timeout after 30 minutes. Please check:"
+            echo_red "   1. Server is accessible at http://localhost:3000"
+            echo_red "   2. You have completed the login process"
+            echo_red "   3. Check server logs: tail -20 $ROOT/logs/yarn.log"
+            echo_red "   4. If using SSH, ensure port forwarding is working: ssh -L 3000:localhost:3000 user@server"
+            exit 1
+        fi
+    done
+    echo_green "✓ Found userData.json. Proceeding..."
+
+    # 验证userData.json文件内容
+    if [ ! -s "modal-login/temp-data/userData.json" ]; then
+        echo_red "❌ userData.json file is empty. Login may have failed."
+        exit 1
+    fi
+
+    ORG_ID=$(awk 'BEGIN { FS = "\"" } !/^[ \t]*[{}]/ { print $(NF - 1); exit }' modal-login/temp-data/userData.json)
+    if [ -z "$ORG_ID" ]; then
+        echo_red "❌ Failed to extract ORG_ID from userData.json. File may be corrupted."
+        echo_red "   File contents:"
+        cat modal-login/temp-data/userData.json
+        exit 1
+    fi
+    echo_green "✓ Your ORG_ID is set to: $ORG_ID"
+    
     # 等待API key激活
-    echo_green ">> Please complete the login process in your browser..."
-    echo_green "   URL: http://localhost:3000"
-    echo_green "   Waiting for API key activation..."
+    echo_green ">> Waiting for API key activation..."
     
     API_KEY_TIMEOUT=0
     MAX_API_KEY_TIMEOUT=300  # 5分钟超时
     
     while [ $API_KEY_TIMEOUT -lt $MAX_API_KEY_TIMEOUT ]; do
-        # 检查API key文件是否存在且包含有效数据
-        if [ -f "modal-login/temp-data/userData.json" ]; then
-            # 尝试解析JSON并检查是否包含必要字段
-            if python3 -c "
-import json
-import sys
-try:
-    with open('modal-login/temp-data/userData.json', 'r') as f:
-        data = json.load(f)
-    # 检查必要字段
-    if 'apiKey' in data and data['apiKey'] and 'orgId' in data and data['orgId']:
-        print('API key activated successfully')
-        sys.exit(0)
-    else:
-        sys.exit(1)
-except:
-    sys.exit(1)
-" 2>/dev/null; then
-                echo_green "✓ API key activated successfully!"
-                break
-            fi
-        fi
-        
-        # 检查服务器进程是否还在运行
+        # 定期检查服务器进程是否还在运行
         if ! kill -0 $SERVER_PID 2>/dev/null; then
-            echo_red "❌ Server process died during API key activation"
+            echo_red "❌ Server process died while waiting for API key activation. Check logs:"
+            echo_red "   tail -20 $ROOT/logs/yarn.log"
             exit 1
         fi
         
-        # 显示等待状态
-        if [ -f "modal-login/temp-data/userData.json" ]; then
+        STATUS=$(curl -s --connect-timeout 5 --max-time 10 "http://localhost:3000/api/get-api-key-status?orgId=$ORG_ID" 2>/dev/null || echo "error")
+        if [[ "$STATUS" == "activated" ]]; then
+            echo_green "✓ API key is activated! Proceeding..."
+            break
+        elif [[ "$STATUS" == "pending" ]]; then
             echo "   API key is pending activation... (${API_KEY_TIMEOUT}s elapsed)"
         else
             echo "   Checking API key status... (${API_KEY_TIMEOUT}s elapsed)"
@@ -390,6 +469,7 @@ except:
         # 超时检查
         if [ $API_KEY_TIMEOUT -ge $MAX_API_KEY_TIMEOUT ]; then
             echo_red "❌ API key activation timeout after 5 minutes."
+            echo_red "   Current status: $STATUS"
             echo_red "   Please check if the login process was completed successfully."
             exit 1
         fi

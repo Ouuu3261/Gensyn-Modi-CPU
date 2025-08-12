@@ -86,7 +86,7 @@ pip install \
 
 # 激活环境并启动
 conda activate rl-swarm
-./run_rl_swarm_fixed.sh
+./swarm_V3.sh
 ```
 
 #### macOS 系统

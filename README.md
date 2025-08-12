@@ -106,7 +106,7 @@ conda create -n rl-swarm python=3.11 -y
 
 # 激活环境并启动
 conda activate rl-swarm
-./run_rl_swarm_fixed.sh
+./swarm_V3.sh
 ```
 
 ## 📋 系统要求

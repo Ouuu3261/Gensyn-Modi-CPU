@@ -123,32 +123,77 @@ check_identity_file() {
     if [[ ! -f "$IDENTITY_PATH" ]]; then
         echo_green "   - 身份文件不存在，正在生成新的身份文件..."
         
-        # 生成新的身份文件
+        # 生成新的libp2p格式身份文件
         python3 -c "
 import os
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
+# libp2p protobuf私钥类
+class PrivateKeyProtobuf:
+    RSA = 0
+    Ed25519 = 1
+    Secp256k1 = 2
+    ECDSA = 3
+    
+    def __init__(self, key_type, data):
+        self.key_type = key_type
+        self.data = data
+    
+    def serialize_to_string(self):
+        result = bytearray()
+        # Field 1: key_type (varint)
+        result.extend(self._encode_varint(1 << 3 | 0))
+        result.extend(self._encode_varint(self.key_type))
+        # Field 2: data (length-delimited)
+        result.extend(self._encode_varint(2 << 3 | 2))
+        result.extend(self._encode_varint(len(self.data)))
+        result.extend(self.data)
+        return bytes(result)
+    
+    def _encode_varint(self, value):
+        result = bytearray()
+        while value >= 0x80:
+            result.append((value & 0x7F) | 0x80)
+            value >>= 7
+        result.append(value & 0x7F)
+        return result
+
 try:
+    # 生成RSA私钥
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
         backend=default_backend()
     )
     
-    pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
+    # 获取DER编码的私钥数据
+    private_key_der = private_key.private_bytes(
+        encoding=serialization.Encoding.DER,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
     )
     
-    with open('$IDENTITY_PATH', 'wb') as f:
-        f.write(pem)
+    # 创建libp2p protobuf私钥
+    libp2p_private_key = PrivateKeyProtobuf(
+        key_type=PrivateKeyProtobuf.RSA,
+        data=private_key_der
+    )
     
-    print('✅ 身份文件已生成: $IDENTITY_PATH')
+    # 序列化为protobuf二进制格式
+    protobuf_data = libp2p_private_key.serialize_to_string()
+    
+    # 写入文件
+    with open('$IDENTITY_PATH', 'wb') as f:
+        f.write(protobuf_data)
+    
+    print('✅ libp2p身份文件已生成: $IDENTITY_PATH')
+    print('   - 密钥类型: RSA 2048位')
+    print('   - 文件格式: libp2p protobuf')
+    print('   - 文件大小: {} 字节'.format(len(protobuf_data)))
 except Exception as e:
-    print(f'❌ 生成身份文件失败: {e}')
+    print(f'❌ 生成libp2p身份文件失败: {e}')
     exit(1)
 "
         

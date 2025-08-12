@@ -91,6 +91,7 @@ game_manager:
     identity_path: ${oc.env:IDENTITY_PATH,null}
     startup_timeout: 120
     beam_size: 50
+    daemon_startup_timeout: 120  # 🔧 关键修复：P2P daemon启动超时设置
   coordinator:
     _target_: genrl.blockchain.coordinator.ModalSwarmCoordinator
     web3_url: ${blockchain.alchemy_url}

@@ -126,6 +126,7 @@ check_identity_file() {
         # 生成新的libp2p格式身份文件
         python3 -c "
 import os
+import platform
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
@@ -161,6 +162,23 @@ class PrivateKeyProtobuf:
         return result
 
 try:
+    # 检测操作系统并选择合适的私钥格式
+    system = platform.system().lower()
+    
+    if system == 'darwin':  # macOS
+        use_pkcs8 = False
+        format_name = 'PKCS#1'
+    elif system == 'linux':  # Ubuntu/Linux
+        use_pkcs8 = True
+        format_name = 'PKCS#8'
+    else:
+        # 默认使用PKCS#8格式
+        use_pkcs8 = True
+        format_name = 'PKCS#8'
+    
+    print(f'检测到操作系统: {system}')
+    print(f'使用私钥格式: {format_name}')
+    
     # 生成RSA私钥
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -168,12 +186,21 @@ try:
         backend=default_backend()
     )
     
-    # 获取DER编码的私钥数据
-    private_key_der = private_key.private_bytes(
-        encoding=serialization.Encoding.DER,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    )
+    # 根据选择的格式生成DER编码的私钥
+    if use_pkcs8:
+        # PKCS#8格式 - Ubuntu/Linux libp2p期望的格式
+        private_key_der = private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+    else:
+        # PKCS#1格式 - macOS libp2p期望的格式
+        private_key_der = private_key.private_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption()
+        )
     
     # 创建libp2p protobuf私钥
     libp2p_private_key = PrivateKeyProtobuf(
@@ -190,7 +217,9 @@ try:
     
     print('✅ libp2p身份文件已生成: $IDENTITY_PATH')
     print('   - 密钥类型: RSA 2048位')
+    print(f'   - 编码格式: {format_name} DER')
     print('   - 文件格式: libp2p protobuf')
+    print(f'   - 操作系统: {system}')
     print('   - 文件大小: {} 字节'.format(len(protobuf_data)))
 except Exception as e:
     print(f'❌ 生成libp2p身份文件失败: {e}')

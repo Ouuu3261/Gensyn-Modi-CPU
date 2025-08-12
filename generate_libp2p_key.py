@@ -65,10 +65,10 @@ def generate_libp2p_private_key(output_path):
         )
         
         # 根据libp2p规范，RSA私钥使用DER编码
-        # 注意：cryptography库中RSA私钥默认使用PKCS8，但libp2p期望原始RSA私钥数据
+        # Go语言的libp2p使用ParsePKCS1PrivateKey，需要PKCS#1格式而不是PKCS#8
         private_key_der = private_key.private_bytes(
             encoding=serialization.Encoding.DER,
-            format=serialization.PrivateFormat.PKCS8,  # 使用PKCS8格式
+            format=serialization.PrivateFormat.TraditionalOpenSSL,  # 这会生成PKCS#1格式
             encryption_algorithm=serialization.NoEncryption()
         )
         
@@ -93,7 +93,7 @@ def generate_libp2p_private_key(output_path):
         
         print(f"✅ libp2p私钥文件已生成: {output_path}")
         print(f"   - 密钥类型: RSA 2048位")
-        print(f"   - 编码格式: PKCS1 DER (libp2p标准)")
+        print(f"   - 编码格式: PKCS#1 DER (Go libp2p标准)")
         print(f"   - 文件格式: protobuf二进制")
         print(f"   - 文件权限: 600")
         print(f"   - 文件大小: {len(protobuf_data)} 字节")

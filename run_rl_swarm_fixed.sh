@@ -208,15 +208,15 @@ except Exception as e:
     # 检查并修复文件权限
     local current_perms
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS使用不同的stat语法
-        current_perms=$(stat -f "%A" "$IDENTITY_PATH" 2>/dev/null || echo "")
+        # macOS使用不同的stat语法，获取八进制权限
+        current_perms=$(stat -f "%Lp" "$IDENTITY_PATH" 2>/dev/null | tail -c 4 || echo "")
     else
         # Linux使用标准语法
         current_perms=$(stat -c "%a" "$IDENTITY_PATH" 2>/dev/null || echo "")
     fi
     
     if [[ "$current_perms" != "600" ]]; then
-        echo_green "   - 当前权限: $current_perms，正在修复为600..."
+        echo_green "   - 当前权限: $current_perms, 正在修复为600..."
         chmod 600 "$IDENTITY_PATH"
         
         if [[ $? -eq 0 ]]; then

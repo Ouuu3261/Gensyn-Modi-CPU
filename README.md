@@ -101,6 +101,10 @@ cd Gensyn-Modi-CPU
 # 如果conda命令未找到，手动添加到PATH
 export PATH="$HOME/miniconda3/bin:$PATH"
 
+brew install node
+corepack enable
+
+
 # 手动创建conda虚拟环境（如果自动脚本失败）
 conda create -n rl-swarm python=3.11 -y
 
